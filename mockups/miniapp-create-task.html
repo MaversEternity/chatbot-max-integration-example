@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MAX Mini App — Create Task</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #1a1a2e; color: #e0e0e0; height: 100vh; display: flex; justify-content: center; align-items: center; }
+  .phone { width: 390px; height: 844px; background: #0f0f23; border-radius: 40px; overflow: hidden; display: flex; flex-direction: column; border: 3px solid #2a2a4a; }
+  .status-bar { height: 54px; display: flex; align-items: flex-end; justify-content: space-between; padding: 0 30px 8px; font-size: 12px; font-weight: 600; color: #fff; }
+  .status-bar .time { font-size: 15px; }
+  .status-icons { display: flex; gap: 5px; }
+  .status-icons svg { width: 16px; height: 16px; fill: #fff; }
+
+  .webapp-bar { background: #16163a; border-bottom: 1px solid #2a2a4a; }
+  .webapp-bar-top { display: flex; align-items: center; padding: 6px 16px 10px; }
+  .webapp-bar .back-area { display: flex; align-items: center; gap: 4px; cursor: pointer; }
+  .webapp-bar .back-arrow { color: #6c8fff; font-size: 20px; }
+  .webapp-bar .back-label { color: #6c8fff; font-size: 15px; }
+  .webapp-bar .title-area { flex: 1; text-align: center; margin: 0 -60px; }
+  .webapp-bar .wa-title { font-size: 16px; font-weight: 600; color: #fff; }
+
+  .content { flex: 1; overflow-y: auto; padding: 20px 16px; }
+
+  .page-title { font-size: 22px; font-weight: 700; color: #fff; margin-bottom: 24px; }
+
+  .form-group { margin-bottom: 18px; }
+  .form-label { font-size: 12px; color: #8888aa; font-weight: 600; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.4px; }
+  .form-input { width: 100%; background: #16163a; border: 1px solid #2a2a4a; border-radius: 12px; padding: 12px 14px; color: #e0e0e0; font-size: 15px; outline: none; transition: border-color 0.2s; }
+  .form-input:focus { border-color: #4a7cff; }
+  .form-input::placeholder { color: #444466; }
+  textarea.form-input { min-height: 90px; resize: none; font-family: inherit; line-height: 1.45; }
+  .form-input.filled { border-color: #333355; }
+
+  .form-row { display: flex; gap: 10px; }
+  .form-row .form-group { flex: 1; }
+
+  .priority-opts { display: flex; gap: 6px; }
+  .pri { flex: 1; padding: 10px; border-radius: 10px; text-align: center; font-size: 13px; font-weight: 600; cursor: pointer; border: 1px solid #2a2a4a; color: #666; transition: all 0.15s; }
+  .pri:hover { border-color: #444; }
+  .pri.sel.low { background: rgba(76,175,80,0.1); border-color: rgba(76,175,80,0.4); color: #4caf50; }
+  .pri.sel.med { background: rgba(255,167,38,0.1); border-color: rgba(255,167,38,0.4); color: #ffa726; }
+  .pri.sel.high { background: rgba(255,82,82,0.1); border-color: rgba(255,82,82,0.4); color: #ff5252; }
+
+  .upload-zone { border: 1.5px dashed #2a2a4a; border-radius: 12px; padding: 20px; text-align: center; cursor: pointer; transition: all 0.2s; }
+  .upload-zone:hover { border-color: #4a7cff; background: rgba(74,124,255,0.03); }
+  .upload-zone .uz-icon { font-size: 28px; margin-bottom: 6px; }
+  .upload-zone .uz-text { font-size: 13px; color: #8888aa; }
+  .upload-zone .uz-hint { font-size: 11px; color: #444466; margin-top: 4px; }
+
+  .file-list { display: flex; flex-direction: column; gap: 6px; margin-top: 10px; }
+  .file-item { background: #16163a; border-radius: 10px; padding: 10px 12px; display: flex; align-items: center; gap: 10px; }
+  .file-item .fi-icon { font-size: 20px; }
+  .file-item .fi-body { flex: 1; min-width: 0; }
+  .file-item .fi-name { font-size: 13px; color: #e0e0e0; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .file-item .fi-size { font-size: 11px; color: #666; }
+  .file-item .fi-remove { color: #ff5252; font-size: 14px; cursor: pointer; padding: 4px; }
+
+  .submit { width: 100%; padding: 15px; background: #4a7cff; border: none; border-radius: 14px; color: #fff; font-size: 16px; font-weight: 600; cursor: pointer; transition: background 0.15s; margin-top: 6px; }
+  .submit:hover { background: #3a6aef; }
+
+  .home-indicator { height: 34px; display: flex; align-items: center; justify-content: center; }
+  .home-indicator div { width: 134px; height: 5px; background: #555577; border-radius: 3px; }
+</style>
+</head>
+<body>
+
+<div class="phone">
+  <div class="status-bar">
+    <span class="time">9:41</span>
+    <div class="status-icons">
+      <svg viewBox="0 0 24 24"><path d="M1 9l2 2c4.97-4.97 13.03-4.97 18 0l2-2C16.93 2.93 7.08 2.93 1 9zm8 8l3 3 3-3c-1.65-1.66-4.34-1.66-6 0zm-4-4l2 2c2.76-2.76 7.24-2.76 10 0l2-2C15.14 9.14 8.87 9.14 5 13z"/></svg>
+      <svg viewBox="0 0 24 24"><path d="M15.67 4H14V2h-4v2H8.33C7.6 4 7 4.6 7 5.33v15.33C7 21.4 7.6 22 8.33 22h7.33c.74 0 1.34-.6 1.34-1.33V5.33C17 4.6 16.4 4 15.67 4z"/></svg>
+    </div>
+  </div>
+
+  <div class="webapp-bar">
+    <div class="webapp-bar-top">
+      <div class="back-area">
+        <span class="back-arrow">‹</span>
+        <span class="back-label">Задачи</span>
+      </div>
+      <div class="title-area">
+        <div class="wa-title">Новая задача</div>
+      </div>
+      <div style="width:50px"></div>
+    </div>
+  </div>
+
+  <div class="content">
+    <div class="page-title">Создать задачу</div>
+
+    <div class="form-group">
+      <div class="form-label">Название</div>
+      <input class="form-input filled" type="text" value="Подготовить декларацию за 1 кв.">
+    </div>
+
+    <div class="form-group">
+      <div class="form-label">Описание</div>
+      <textarea class="form-input filled">Подготовить и сдать налоговую декларацию по УСН за первый квартал 2026 года.</textarea>
+    </div>
+
+    <div class="form-row">
+      <div class="form-group">
+        <div class="form-label">Срок</div>
+        <input class="form-input filled" type="text" value="15.04.2026">
+      </div>
+      <div class="form-group">
+        <div class="form-label">Приоритет</div>
+        <div class="priority-opts">
+          <div class="pri low">Низ</div>
+          <div class="pri sel med">Сред</div>
+          <div class="pri high">Выс</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="form-group">
+      <div class="form-label">Файлы</div>
+      <div class="upload-zone">
+        <div class="uz-icon">📎</div>
+        <div class="uz-text">Нажмите для загрузки</div>
+        <div class="uz-hint">PDF, DOC, XLS, JPG — до 20 МБ</div>
+      </div>
+      <div class="file-list">
+        <div class="file-item">
+          <span class="fi-icon">📄</span>
+          <div class="fi-body">
+            <div class="fi-name">Выписка_Сбер_Q1_2026.pdf</div>
+            <div class="fi-size">2.3 МБ</div>
+          </div>
+          <span class="fi-remove">✕</span>
+        </div>
+        <div class="file-item">
+          <span class="fi-icon">📊</span>
+          <div class="fi-body">
+            <div class="fi-name">Счета_январь.xlsx</div>
+            <div class="fi-size">450 КБ</div>
+          </div>
+          <span class="fi-remove">✕</span>
+        </div>
+      </div>
+    </div>
+
+    <button class="submit">Создать задачу</button>
+    <div style="height:20px"></div>
+  </div>
+
+  <div class="home-indicator"><div></div></div>
+</div>
+
+</body>
+</html>

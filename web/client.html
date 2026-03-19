@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MAX Bot — Client Simulator</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #1a1a2e; color: #e0e0e0; height: 100vh; display: flex; justify-content: center; align-items: center; }
+
+  .phone { width: 390px; height: 844px; background: #0f0f23; border-radius: 40px; overflow: hidden; display: flex; flex-direction: column; border: 3px solid #2a2a4a; }
+  .phone-status { height: 54px; display: flex; align-items: flex-end; justify-content: space-between; padding: 0 30px 8px; font-size: 12px; font-weight: 600; color: #fff; flex-shrink: 0; }
+  .phone-status .time { font-size: 15px; }
+  .phone-status .icons { display: flex; gap: 5px; }
+  .phone-status .icons svg { width: 16px; height: 16px; fill: #fff; }
+  .home-indicator { height: 34px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .home-indicator div { width: 134px; height: 5px; background: #555577; border-radius: 3px; }
+
+  .header { background: #16163a; padding: 14px 16px; display: flex; align-items: center; gap: 12px; border-bottom: 1px solid #2a2a4a; }
+  .header .avatar { width: 40px; height: 40px; border-radius: 50%; background: linear-gradient(135deg, #4a7cff, #6c5ce7); display: flex; align-items: center; justify-content: center; font-size: 16px; font-weight: 700; color: #fff; flex-shrink: 0; }
+  .header .info { flex: 1; }
+  .header .name { font-size: 16px; font-weight: 600; color: #fff; }
+  .header .status { font-size: 12px; color: #8888aa; }
+  .header .status.online { color: #4caf50; }
+  .header .badge { font-size: 10px; background: #4a7cff; color: #fff; padding: 2px 6px; border-radius: 4px; margin-left: 6px; }
+
+  .messages { flex: 1; overflow-y: auto; padding: 12px 16px; display: flex; flex-direction: column; gap: 4px; scroll-behavior: smooth; }
+
+  .msg { max-width: 82%; padding: 9px 13px; font-size: 14.5px; line-height: 1.45; word-wrap: break-word; animation: fadeIn 0.15s ease; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
+  .msg.bot { background: #1e1e48; align-self: flex-start; border-radius: 4px 16px 16px 16px; }
+  .msg.user { background: #4a7cff; color: #fff; align-self: flex-end; border-radius: 16px 16px 4px 16px; }
+  .msg .ts { font-size: 10px; color: rgba(255,255,255,0.25); text-align: right; margin-top: 3px; }
+
+  .keyboard { align-self: flex-start; max-width: 82%; display: flex; flex-direction: column; gap: 4px; margin: 4px 0; animation: fadeIn 0.2s ease; }
+  .kb-row { display: flex; gap: 4px; }
+  .kb-btn { flex: 1; background: rgba(74,124,255,0.1); border: 1px solid rgba(74,124,255,0.25); color: #6c8fff; padding: 9px 8px; border-radius: 10px; font-size: 13.5px; font-weight: 500; cursor: pointer; text-align: center; transition: all 0.12s; white-space: nowrap; }
+  .kb-btn:hover { background: rgba(74,124,255,0.25); }
+  .kb-btn:active { background: #4a7cff; color: #fff; }
+
+  .typing { align-self: flex-start; font-size: 13px; color: #555577; padding: 6px 0; animation: fadeIn 0.2s ease; }
+  .typing span { animation: blink 1s infinite; }
+  .typing span:nth-child(2) { animation-delay: 0.2s; }
+  .typing span:nth-child(3) { animation-delay: 0.4s; }
+  @keyframes blink { 0%,100% { opacity: 0.3; } 50% { opacity: 1; } }
+
+  .date-div { text-align: center; font-size: 11px; color: #444466; padding: 8px 0 4px; }
+
+  .input-area { background: #16163a; padding: 10px 14px; display: flex; align-items: center; gap: 10px; border-top: 1px solid #2a2a4a; }
+  .input-area .attach { color: #6c8fff; font-size: 20px; cursor: pointer; padding: 4px; border-radius: 6px; background: none; border: none; }
+  .input-area .attach:hover { background: rgba(74,124,255,0.15); }
+  .input-area input { flex: 1; background: #1e1e48; border: none; border-radius: 20px; padding: 10px 16px; color: #e0e0e0; font-size: 14.5px; outline: none; }
+  .input-area input::placeholder { color: #555577; }
+  .input-area .send-btn { width: 36px; height: 36px; background: #4a7cff; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; border: none; transition: background 0.12s; }
+  .input-area .send-btn:hover { background: #3a6aef; }
+  .input-area .send-btn svg { width: 18px; height: 18px; fill: #fff; }
+  .input-area .send-btn:disabled { background: #333; cursor: default; }
+
+  .conn-status { text-align: center; font-size: 11px; padding: 4px; }
+  .conn-status.ok { color: #4caf50; background: rgba(76,175,80,0.08); }
+  .conn-status.err { color: #ff5252; background: rgba(255,82,82,0.08); }
+</style>
+</head>
+<body>
+
+<div class="phone">
+  <div class="phone-status">
+    <span class="time">9:41</span>
+    <div class="icons">
+      <svg viewBox="0 0 24 24"><path d="M1 9l2 2c4.97-4.97 13.03-4.97 18 0l2-2C16.93 2.93 7.08 2.93 1 9zm8 8l3 3 3-3c-1.65-1.66-4.34-1.66-6 0zm-4-4l2 2c2.76-2.76 7.24-2.76 10 0l2-2C15.14 9.14 8.87 9.14 5 13z"/></svg>
+      <svg viewBox="0 0 24 24"><path d="M15.67 4H14V2h-4v2H8.33C7.6 4 7 4.6 7 5.33v15.33C7 21.4 7.6 22 8.33 22h7.33c.74 0 1.34-.6 1.34-1.33V5.33C17 4.6 16.4 4 15.67 4z"/></svg>
+    </div>
+  </div>
+  <div class="header">
+    <div class="avatar">БК</div>
+    <div class="info">
+      <div class="name">БухКомпания Финлид <span class="badge">бот</span></div>
+      <div class="status" id="botStatus">подключение...</div>
+    </div>
+  </div>
+
+  <div id="connStatus" class="conn-status err">Подключение к серверу...</div>
+  <div class="messages" id="messages"></div>
+
+  <div class="input-area">
+    <button class="attach" id="attachBtn" title="Прикрепить файл">📎</button>
+    <input type="text" id="msgInput" placeholder="Сообщение..." autocomplete="off">
+    <button class="send-btn" id="sendBtn">
+      <svg viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
+    </button>
+  </div>
+  <div class="home-indicator"><div></div></div>
+</div>
+
+<script>
+const messagesEl = document.getElementById('messages');
+const msgInput = document.getElementById('msgInput');
+const sendBtn = document.getElementById('sendBtn');
+const attachBtn = document.getElementById('attachBtn');
+const connStatus = document.getElementById('connStatus');
+const botStatus = document.getElementById('botStatus');
+
+let ws;
+let reconnectTimer;
+
+function connect() {
+  const wsUrl = `ws://${location.host}/ws`;
+  ws = new WebSocket(wsUrl);
+
+  ws.onopen = () => {
+    connStatus.textContent = 'Подключено';
+    connStatus.className = 'conn-status ok';
+    botStatus.textContent = 'онлайн';
+    botStatus.className = 'status online';
+    setTimeout(() => { connStatus.style.display = 'none'; }, 1500);
+  };
+
+  ws.onclose = () => {
+    connStatus.style.display = '';
+    connStatus.textContent = 'Отключено. Переподключение...';
+    connStatus.className = 'conn-status err';
+    botStatus.textContent = 'оффлайн';
+    botStatus.className = 'status';
+    reconnectTimer = setTimeout(connect, 2000);
+  };
+
+  ws.onerror = () => {};
+
+  ws.onmessage = (e) => {
+    const data = JSON.parse(e.data);
+    if (data.type === 'bot_message') {
+      removeTyping();
+      addBotMessage(data.text, data.buttons);
+    }
+  };
+}
+
+function sendMessage(text) {
+  if (!text.trim() || !ws || ws.readyState !== 1) return;
+  addUserMessage(text);
+  ws.send(JSON.stringify({ type: 'message', text: text }));
+  showTyping();
+}
+
+function sendCallback(payload, btnText) {
+  if (!ws || ws.readyState !== 1) return;
+  addUserMessage(btnText);
+  ws.send(JSON.stringify({ type: 'callback', payload: payload }));
+  showTyping();
+}
+
+function sendFile() {
+  const names = ['Выписка_Сбер_Q1_2026.pdf', 'Акты_сверки.zip', 'Счёт-фактура_03.xlsx', 'Договор.docx'];
+  const name = names[Math.floor(Math.random() * names.length)];
+  addUserMessage(`📎 ${name}`);
+  ws.send(JSON.stringify({ type: 'file', filename: name }));
+  showTyping();
+}
+
+function addUserMessage(text) {
+  const div = document.createElement('div');
+  div.className = 'msg user';
+  div.innerHTML = escapeHtml(text).replace(/\n/g, '<br>') + `<div class="ts">${timeNow()}</div>`;
+  messagesEl.appendChild(div);
+  scrollBottom();
+}
+
+function addBotMessage(text, buttons) {
+  const div = document.createElement('div');
+  div.className = 'msg bot';
+  div.innerHTML = formatMarkdown(text) + `<div class="ts">${timeNow()}</div>`;
+  messagesEl.appendChild(div);
+
+  if (buttons && buttons.length > 0) {
+    const kb = document.createElement('div');
+    kb.className = 'keyboard';
+    for (const row of buttons) {
+      const rowDiv = document.createElement('div');
+      rowDiv.className = 'kb-row';
+      for (const btn of row) {
+        const b = document.createElement('div');
+        b.className = 'kb-btn';
+        b.textContent = btn.text || '';
+        if (btn.type === 'callback' && btn.payload) {
+          const payload = btn.payload;
+          const text = btn.text;
+          b.onclick = () => sendCallback(payload, text);
+        } else if (btn.type === 'link' && btn.url) {
+          const url = btn.url;
+          b.onclick = () => window.open(url, '_blank');
+        } else if (btn.type === 'open_app') {
+          const payload = btn.payload || '';
+          b.onclick = () => {
+            const url = payload ? `/miniapp/?startapp=${payload}` : '/miniapp/';
+            window.open(url, 'miniapp', 'width=420,height=880');
+          };
+          b.style.background = 'rgba(74,124,255,0.2)';
+        }
+        rowDiv.appendChild(b);
+      }
+      kb.appendChild(rowDiv);
+    }
+    messagesEl.appendChild(kb);
+  }
+  scrollBottom();
+}
+
+function showTyping() {
+  removeTyping();
+  const div = document.createElement('div');
+  div.className = 'typing';
+  div.id = 'typing';
+  div.innerHTML = 'печатает<span>.</span><span>.</span><span>.</span>';
+  messagesEl.appendChild(div);
+  scrollBottom();
+}
+
+function removeTyping() {
+  const el = document.getElementById('typing');
+  if (el) el.remove();
+}
+
+function formatMarkdown(text) {
+  if (!text) return '';
+  let html = escapeHtml(text);
+  html = html.replace(/\*([^*]+)\*/g, '<b>$1</b>');
+  html = html.replace(/_([^_]+)_/g, '<i>$1</i>');
+  html = html.replace(/`([^`]+)`/g, '<code>$1</code>');
+  html = html.replace(/\n/g, '<br>');
+  return html;
+}
+
+function escapeHtml(str) {
+  const div = document.createElement('div');
+  div.textContent = str;
+  return div.innerHTML;
+}
+
+function timeNow() {
+  const d = new Date();
+  return `${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
+}
+
+function scrollBottom() {
+  requestAnimationFrame(() => {
+    messagesEl.scrollTop = messagesEl.scrollHeight;
+  });
+}
+
+// Event listeners
+sendBtn.onclick = () => {
+  sendMessage(msgInput.value);
+  msgInput.value = '';
+  msgInput.focus();
+};
+
+msgInput.onkeydown = (e) => {
+  if (e.key === 'Enter' && !e.shiftKey) {
+    e.preventDefault();
+    sendBtn.click();
+  }
+};
+
+attachBtn.onclick = () => sendFile();
+
+// Start
+connect();
+
+// Show welcome hint
+setTimeout(() => {
+  const div = document.createElement('div');
+  div.className = 'date-div';
+  div.textContent = 'Сегодня';
+  messagesEl.appendChild(div);
+}, 200);
+
+// Auto-send /start after connection
+setTimeout(() => {
+  if (ws && ws.readyState === 1) {
+    ws.send(JSON.stringify({ type: 'message', text: '/start' }));
+    showTyping();
+  }
+}, 800);
+</script>
+
+</body>
+</html>

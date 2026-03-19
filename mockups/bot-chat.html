@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MAX Bot — Realistic Chat</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #1a1a2e; color: #e0e0e0; height: 100vh; display: flex; justify-content: center; align-items: center; }
+  .phone { width: 390px; height: 844px; background: #0f0f23; border-radius: 40px; overflow: hidden; display: flex; flex-direction: column; border: 3px solid #2a2a4a; }
+  .status-bar { height: 54px; display: flex; align-items: flex-end; justify-content: space-between; padding: 0 30px 8px; font-size: 12px; font-weight: 600; color: #fff; }
+  .status-bar .time { font-size: 15px; }
+  .status-icons { display: flex; gap: 5px; }
+  .status-icons svg { width: 16px; height: 16px; fill: #fff; }
+
+  .header { background: #16163a; padding: 12px 16px; display: flex; align-items: center; gap: 12px; border-bottom: 1px solid #2a2a4a; }
+  .header .back { color: #6c8fff; font-size: 24px; cursor: pointer; }
+  .header .avatar { width: 40px; height: 40px; border-radius: 50%; background: linear-gradient(135deg, #4a7cff, #6c5ce7); display: flex; align-items: center; justify-content: center; font-size: 18px; font-weight: 700; color: #fff; flex-shrink: 0; }
+  .header .info { flex: 1; }
+  .header .name { font-size: 16px; font-weight: 600; color: #fff; }
+  .header .status { font-size: 13px; color: #8888aa; }
+  .header .more { color: #6c8fff; font-size: 20px; cursor: pointer; }
+
+  .messages { flex: 1; overflow-y: auto; padding: 12px 16px; display: flex; flex-direction: column; gap: 2px; }
+
+  .msg { max-width: 82%; padding: 8px 12px; font-size: 15px; line-height: 1.45; word-wrap: break-word; }
+  .msg.bot { background: #1e1e48; align-self: flex-start; border-radius: 4px 18px 18px 18px; }
+  .msg.bot.cont { border-radius: 4px 18px 18px 18px; margin-top: 2px; }
+  .msg.user { background: #4a7cff; color: #fff; align-self: flex-end; border-radius: 18px 18px 4px 18px; }
+  .msg b { font-weight: 600; }
+  .msg .ts { font-size: 11px; color: rgba(255,255,255,0.3); text-align: right; margin-top: 3px; }
+  .msg.bot .ts { color: rgba(255,255,255,0.25); }
+  .msg code { background: rgba(255,255,255,0.08); padding: 1px 5px; border-radius: 4px; font-size: 13px; }
+  .msg a { color: #8cb4ff; text-decoration: underline; }
+
+  /* Inline keyboard */
+  .keyboard { align-self: flex-start; max-width: 82%; display: flex; flex-direction: column; gap: 4px; margin-top: 4px; margin-bottom: 4px; }
+  .kb-row { display: flex; gap: 4px; }
+  .kb-btn { flex: 1; background: rgba(74,124,255,0.12); border: 1px solid rgba(74,124,255,0.25); color: #6c8fff; padding: 9px 8px; border-radius: 10px; font-size: 14px; font-weight: 500; cursor: pointer; text-align: center; transition: all 0.15s; }
+  .kb-btn:hover { background: rgba(74,124,255,0.25); }
+  .kb-btn.accent { background: rgba(74,124,255,0.2); border-color: rgba(74,124,255,0.4); }
+
+  .date-divider { text-align: center; font-size: 12px; color: #555577; padding: 10px 0 6px; }
+
+  /* File attachment bubble */
+  .file-attach { display: flex; align-items: center; gap: 8px; background: rgba(255,255,255,0.05); border-radius: 8px; padding: 8px 10px; margin-top: 6px; }
+  .file-attach .fa-icon { font-size: 28px; }
+  .file-attach .fa-info { flex: 1; }
+  .file-attach .fa-name { font-size: 13px; font-weight: 500; }
+  .file-attach .fa-size { font-size: 11px; opacity: 0.5; }
+
+  .typing { align-self: flex-start; font-size: 13px; color: #555577; padding: 4px 0; font-style: italic; }
+
+  .input-area { background: #16163a; padding: 10px 16px; display: flex; align-items: center; gap: 10px; border-top: 1px solid #2a2a4a; }
+  .input-area .attach { color: #6c8fff; font-size: 22px; cursor: pointer; }
+  .input-area input { flex: 1; background: #1e1e48; border: none; border-radius: 20px; padding: 10px 16px; color: #e0e0e0; font-size: 15px; outline: none; }
+  .input-area input::placeholder { color: #555577; }
+  .input-area .send { width: 36px; height: 36px; background: #4a7cff; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; flex-shrink: 0; }
+  .input-area .send svg { width: 18px; height: 18px; fill: #fff; }
+
+  .home-indicator { height: 34px; display: flex; align-items: center; justify-content: center; }
+  .home-indicator div { width: 134px; height: 5px; background: #555577; border-radius: 3px; }
+
+  .spacer { height: 6px; }
+</style>
+</head>
+<body>
+
+<div class="phone">
+  <div class="status-bar">
+    <span class="time">9:41</span>
+    <div class="status-icons">
+      <svg viewBox="0 0 24 24"><path d="M1 9l2 2c4.97-4.97 13.03-4.97 18 0l2-2C16.93 2.93 7.08 2.93 1 9zm8 8l3 3 3-3c-1.65-1.66-4.34-1.66-6 0zm-4-4l2 2c2.76-2.76 7.24-2.76 10 0l2-2C15.14 9.14 8.87 9.14 5 13z"/></svg>
+      <svg viewBox="0 0 24 24"><path d="M15.67 4H14V2h-4v2H8.33C7.6 4 7 4.6 7 5.33v15.33C7 21.4 7.6 22 8.33 22h7.33c.74 0 1.34-.6 1.34-1.33V5.33C17 4.6 16.4 4 15.67 4z"/></svg>
+    </div>
+  </div>
+
+  <div class="header">
+    <span class="back">&#8249;</span>
+    <div class="avatar">БК</div>
+    <div class="info">
+      <div class="name">БухКомпания Финлид</div>
+      <div class="status">бот</div>
+    </div>
+    <span class="more">&#8942;</span>
+  </div>
+
+  <div class="messages">
+    <div class="date-divider">Сегодня</div>
+
+    <!-- Bot welcome -->
+    <div class="msg bot">
+      Добро пожаловать! Я бот бухгалтерской компании <b>Финлид</b>. Через меня вы можете ставить задачи и общаться с вашим бухгалтером.
+      <div class="ts">09:00</div>
+    </div>
+
+    <!-- Persistent keyboard -->
+    <div class="keyboard">
+      <div class="kb-row">
+        <div class="kb-btn accent">📋 Создать задачу</div>
+        <div class="kb-btn">📑 Мои задачи</div>
+      </div>
+      <div class="kb-row">
+        <div class="kb-btn">📂 Открыть кабинет</div>
+      </div>
+    </div>
+
+    <div class="spacer"></div>
+
+    <!-- User creates task -->
+    <div class="msg user">
+      📋 Создать задачу
+      <div class="ts">09:15</div>
+    </div>
+
+    <div class="msg bot">
+      Введите название задачи:
+      <div class="ts">09:15</div>
+    </div>
+
+    <div class="msg user">
+      Подготовить декларацию за 1 квартал
+      <div class="ts">09:16</div>
+    </div>
+
+    <div class="msg bot">
+      Укажите срок выполнения (дд.мм.гггг):
+      <div class="ts">09:16</div>
+    </div>
+
+    <div class="msg user">
+      15.04.2026
+      <div class="ts">09:16</div>
+    </div>
+
+    <div class="msg bot">
+      ✅ <b>Задача создана</b><br><br>📋 <b>#42 Подготовить декларацию за 1 квартал</b><br>📅 Срок: 15.04.2026<br>📊 Статус: Новая
+      <div class="ts">09:16</div>
+    </div>
+    <div class="keyboard">
+      <div class="kb-row">
+        <div class="kb-btn accent">💬 Написать по задаче</div>
+        <div class="kb-btn">📂 Открыть</div>
+      </div>
+    </div>
+
+    <div class="spacer"></div>
+
+    <!-- Accountant notification comes through bot -->
+    <div class="msg bot">
+      💬 <b>Сообщение по задаче #42</b><br><i>Подготовить декларацию за 1 квартал</i><br><br>Добрый день! Пришлите, пожалуйста, выписку из банка за январь–март и акты сверки.
+      <div class="ts">10:30</div>
+    </div>
+    <div class="keyboard">
+      <div class="kb-row">
+        <div class="kb-btn">↩️ Ответить</div>
+        <div class="kb-btn">📂 Открыть задачу</div>
+      </div>
+    </div>
+
+    <div class="spacer"></div>
+
+    <!-- Client replies -->
+    <div class="msg user">
+      Отправляю выписку, акты будут завтра
+      <div class="ts">10:45</div>
+    </div>
+
+    <div class="msg user">
+      <div class="file-attach">
+        <span class="fa-icon">📄</span>
+        <div class="fa-info">
+          <div class="fa-name">Выписка_Сбер_Q1_2026.pdf</div>
+          <div class="fa-size">2.3 МБ</div>
+        </div>
+      </div>
+      <div class="ts">10:45</div>
+    </div>
+
+    <div class="msg bot">
+      ✅ Сообщение и файл доставлены по задаче <b>#42</b>
+      <div class="ts">10:45</div>
+    </div>
+
+    <div class="spacer"></div>
+
+    <!-- Task list request -->
+    <div class="msg user">
+      📑 Мои задачи
+      <div class="ts">11:00</div>
+    </div>
+
+    <div class="msg bot">
+      <b>Ваши актуальные задачи:</b><br><br>🔴 <b>#38</b> Сдать отчёт по НДС<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;📅 10.03 · <b>Просрочено</b><br><br>🟡 <b>#42</b> Подготовить декларацию за 1 кв.<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;📅 15.04 · В работе<br><br>🔵 <b>#43</b> Сверка с ООО «Альфа»<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;📅 20.04 · Новая<br><br>🟣 <b>#40</b> Закрывающие за февраль<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;📅 25.03 · На проверке
+      <div class="ts">11:00</div>
+    </div>
+    <div class="keyboard">
+      <div class="kb-row">
+        <div class="kb-btn">Актуальные</div>
+        <div class="kb-btn">Завершённые</div>
+        <div class="kb-btn">Все</div>
+      </div>
+      <div class="kb-row">
+        <div class="kb-btn accent">📂 Открыть кабинет</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="input-area">
+    <span class="attach">+</span>
+    <input type="text" placeholder="Сообщение...">
+    <div class="send">
+      <svg viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
+    </div>
+  </div>
+
+  <div class="home-indicator"><div></div></div>
+</div>
+
+</body>
+</html>

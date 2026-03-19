@@ -1,0 +1,14 @@
+.root {
+  padding: 16px;
+  min-height: 100vh;
+}
+
+.priorities {
+  display: flex;
+  gap: 8px;
+  padding: 8px;
+}
+
+.submit {
+  margin-top: 24px;
+}

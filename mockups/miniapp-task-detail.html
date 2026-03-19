@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MAX Mini App — Task Detail</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #1a1a2e; color: #e0e0e0; height: 100vh; display: flex; justify-content: center; align-items: center; }
+  .phone { width: 390px; height: 844px; background: #0f0f23; border-radius: 40px; overflow: hidden; display: flex; flex-direction: column; border: 3px solid #2a2a4a; }
+  .status-bar { height: 54px; display: flex; align-items: flex-end; justify-content: space-between; padding: 0 30px 8px; font-size: 12px; font-weight: 600; color: #fff; }
+  .status-bar .time { font-size: 15px; }
+  .status-icons { display: flex; gap: 5px; }
+  .status-icons svg { width: 16px; height: 16px; fill: #fff; }
+
+  .webapp-bar { background: #16163a; border-bottom: 1px solid #2a2a4a; }
+  .webapp-bar-top { display: flex; align-items: center; padding: 6px 16px 10px; }
+  .webapp-bar .back-area { display: flex; align-items: center; gap: 4px; cursor: pointer; }
+  .webapp-bar .back-arrow { color: #6c8fff; font-size: 20px; }
+  .webapp-bar .back-label { color: #6c8fff; font-size: 15px; }
+  .webapp-bar .title-area { flex: 1; text-align: center; margin: 0 -60px; }
+  .webapp-bar .wa-title { font-size: 16px; font-weight: 600; color: #fff; }
+  .webapp-bar .wa-subtitle { font-size: 11px; color: #8888aa; }
+  .webapp-bar .menu-btn { color: #6c8fff; font-size: 20px; cursor: pointer; }
+
+  .content { flex: 1; overflow-y: auto; }
+
+  .task-head { padding: 16px; }
+  .task-num { font-size: 13px; color: #6c8fff; font-weight: 600; }
+  .task-title { font-size: 19px; font-weight: 700; color: #fff; margin: 4px 0 14px; line-height: 1.3; }
+  .fields { display: flex; flex-direction: column; gap: 10px; }
+  .field { display: flex; align-items: center; }
+  .field .f-label { font-size: 13px; color: #8888aa; width: 90px; flex-shrink: 0; }
+  .field .f-value { font-size: 14px; color: #e0e0e0; font-weight: 500; }
+  .status-pill { display: inline-block; padding: 3px 10px; border-radius: 6px; font-size: 12px; font-weight: 600; background: rgba(255,167,38,0.12); color: #ffa726; }
+
+  .tabs { display: flex; border-bottom: 1px solid #2a2a4a; background: #0f0f23; position: sticky; top: 0; z-index: 5; }
+  .tab { flex: 1; text-align: center; padding: 12px 4px; font-size: 13px; font-weight: 500; color: #555577; cursor: pointer; position: relative; }
+  .tab.on { color: #6c8fff; }
+  .tab.on::after { content: ''; position: absolute; bottom: 0; left: 16%; right: 16%; height: 2px; background: #4a7cff; border-radius: 2px; }
+  .tab .cnt { background: rgba(74,124,255,0.2); color: #6c8fff; font-size: 10px; padding: 1px 5px; border-radius: 8px; margin-left: 3px; }
+
+  /* Discussion */
+  .discussion { padding: 12px 16px; display: flex; flex-direction: column; gap: 10px; }
+  .date-sep { text-align: center; font-size: 11px; color: #444466; padding: 4px 0; }
+
+  .cmsg { display: flex; gap: 8px; }
+  .cmsg.right { flex-direction: row-reverse; }
+  .cav { width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; flex-shrink: 0; margin-top: 18px; }
+  .cmsg.left .cav { background: linear-gradient(135deg, #4a7cff, #6c5ce7); color: #fff; }
+  .cmsg.right .cav { background: linear-gradient(135deg, #26a69a, #4caf50); color: #fff; }
+  .cbubble { max-width: 78%; }
+  .csender { font-size: 11px; font-weight: 600; margin-bottom: 3px; }
+  .cmsg.left .csender { color: #6c8fff; }
+  .cmsg.right .csender { color: #4caf50; text-align: right; }
+  .ctext { padding: 9px 12px; font-size: 14px; line-height: 1.45; border-radius: 4px 16px 16px 16px; }
+  .cmsg.left .ctext { background: #1e1e48; }
+  .cmsg.right .ctext { background: #162e24; border-radius: 16px 4px 16px 16px; }
+  .ctime { font-size: 10px; color: rgba(255,255,255,0.2); margin-top: 2px; }
+  .cmsg.right .ctime { text-align: right; }
+
+  /* File inside message */
+  .cfile { display: flex; align-items: center; gap: 8px; background: rgba(255,255,255,0.04); border-radius: 10px; padding: 8px 10px; margin-top: 6px; cursor: pointer; }
+  .cfile:hover { background: rgba(255,255,255,0.07); }
+  .cfile .cf-icon { font-size: 22px; }
+  .cfile .cf-body { flex: 1; min-width: 0; }
+  .cfile .cf-name { font-size: 12px; color: #ccc; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .cfile .cf-size { font-size: 10px; color: #666; }
+  .cfile .cf-dl { color: #6c8fff; font-size: 16px; }
+
+  .input-area { background: #16163a; padding: 10px 16px; display: flex; align-items: center; gap: 10px; border-top: 1px solid #2a2a4a; }
+  .input-area .attach { color: #6c8fff; font-size: 20px; cursor: pointer; }
+  .input-area input { flex: 1; background: #1e1e48; border: none; border-radius: 20px; padding: 10px 14px; color: #e0e0e0; font-size: 14px; outline: none; }
+  .input-area input::placeholder { color: #555577; }
+  .input-area .send { width: 34px; height: 34px; background: #4a7cff; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; flex-shrink: 0; }
+  .input-area .send svg { width: 16px; height: 16px; fill: #fff; }
+
+  .home-indicator { height: 34px; display: flex; align-items: center; justify-content: center; }
+  .home-indicator div { width: 134px; height: 5px; background: #555577; border-radius: 3px; }
+</style>
+</head>
+<body>
+
+<div class="phone">
+  <div class="status-bar">
+    <span class="time">9:41</span>
+    <div class="status-icons">
+      <svg viewBox="0 0 24 24"><path d="M1 9l2 2c4.97-4.97 13.03-4.97 18 0l2-2C16.93 2.93 7.08 2.93 1 9zm8 8l3 3 3-3c-1.65-1.66-4.34-1.66-6 0zm-4-4l2 2c2.76-2.76 7.24-2.76 10 0l2-2C15.14 9.14 8.87 9.14 5 13z"/></svg>
+      <svg viewBox="0 0 24 24"><path d="M15.67 4H14V2h-4v2H8.33C7.6 4 7 4.6 7 5.33v15.33C7 21.4 7.6 22 8.33 22h7.33c.74 0 1.34-.6 1.34-1.33V5.33C17 4.6 16.4 4 15.67 4z"/></svg>
+    </div>
+  </div>
+
+  <div class="webapp-bar">
+    <div class="webapp-bar-top">
+      <div class="back-area">
+        <span class="back-arrow">‹</span>
+        <span class="back-label">Задачи</span>
+      </div>
+      <div class="title-area">
+        <div class="wa-title">Задача #42</div>
+      </div>
+      <span class="menu-btn">⋯</span>
+    </div>
+  </div>
+
+  <div class="content">
+    <div class="task-head">
+      <div class="task-num">#42</div>
+      <div class="task-title">Подготовить декларацию за 1 квартал</div>
+      <div class="fields">
+        <div class="field">
+          <span class="f-label">Статус</span>
+          <span class="status-pill">В работе</span>
+        </div>
+        <div class="field">
+          <span class="f-label">Срок</span>
+          <span class="f-value">15 апреля 2026</span>
+        </div>
+        <div class="field">
+          <span class="f-label">Исполнитель</span>
+          <span class="f-value">БухКомпания Финлид</span>
+        </div>
+        <div class="field">
+          <span class="f-label">Создана</span>
+          <span class="f-value">17 марта 2026</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="tabs">
+      <div class="tab on">Обсуждение<span class="cnt">5</span></div>
+      <div class="tab">Файлы<span class="cnt">3</span></div>
+      <div class="tab">История</div>
+    </div>
+
+    <div class="discussion">
+      <div class="date-sep">17 марта</div>
+
+      <div class="cmsg left">
+        <div class="cav">БК</div>
+        <div class="cbubble">
+          <div class="csender">БухКомпания Финлид</div>
+          <div class="ctext">Добрый день! Для подготовки декларации за 1 квартал потребуются:<br>1. Выписка из банка за янв–март<br>2. Акты сверки с контрагентами<br>3. Счета-фактуры</div>
+          <div class="ctime">10:30</div>
+        </div>
+      </div>
+
+      <div class="cmsg right">
+        <div class="cav">ИП</div>
+        <div class="cbubble">
+          <div class="csender">Иван Петрович</div>
+          <div class="ctext">
+            Здравствуйте! Выписку отправляю, акты будут завтра.
+            <div class="cfile">
+              <span class="cf-icon">📄</span>
+              <div class="cf-body">
+                <div class="cf-name">Выписка_Сбер_Q1_2026.pdf</div>
+                <div class="cf-size">2.3 МБ</div>
+              </div>
+              <span class="cf-dl">⬇</span>
+            </div>
+          </div>
+          <div class="ctime">10:45</div>
+        </div>
+      </div>
+
+      <div class="cmsg left">
+        <div class="cav">БК</div>
+        <div class="cbubble">
+          <div class="csender">БухКомпания Финлид</div>
+          <div class="ctext">Получила, спасибо! Жду акты сверки.</div>
+          <div class="ctime">10:48</div>
+        </div>
+      </div>
+
+      <div class="date-sep">18 марта</div>
+
+      <div class="cmsg right">
+        <div class="cav">ИП</div>
+        <div class="cbubble">
+          <div class="csender">Иван Петрович</div>
+          <div class="ctext">
+            Вот акты и счета-фактуры
+            <div class="cfile">
+              <span class="cf-icon">📦</span>
+              <div class="cf-body">
+                <div class="cf-name">Акты_сверки_Q1.zip</div>
+                <div class="cf-size">5.1 МБ</div>
+              </div>
+              <span class="cf-dl">⬇</span>
+            </div>
+            <div class="cfile">
+              <span class="cf-icon">📦</span>
+              <div class="cf-body">
+                <div class="cf-name">Счета-фактуры_Q1.zip</div>
+                <div class="cf-size">3.8 МБ</div>
+              </div>
+              <span class="cf-dl">⬇</span>
+            </div>
+          </div>
+          <div class="ctime">09:15</div>
+        </div>
+      </div>
+
+      <div class="cmsg left">
+        <div class="cav">БК</div>
+        <div class="cbubble">
+          <div class="csender">БухКомпания Финлид</div>
+          <div class="ctext">Все документы получены! Приступаю к подготовке. Ориентировочно будет готово к 10 апреля.</div>
+          <div class="ctime">09:30</div>
+        </div>
+      </div>
+
+      <div style="height: 10px;"></div>
+    </div>
+  </div>
+
+  <div class="input-area">
+    <span class="attach">+</span>
+    <input placeholder="Сообщение по задаче...">
+    <div class="send">
+      <svg viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
+    </div>
+  </div>
+
+  <div class="home-indicator"><div></div></div>
+</div>
+
+</body>
+</html>

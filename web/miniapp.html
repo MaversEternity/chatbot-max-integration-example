@@ -1,0 +1,492 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Финлид — Задачи</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #1a1a2e; color: #e0e0e0; height: 100vh; display: flex; justify-content: center; align-items: center; }
+  .phone { width: 390px; height: 844px; background: #0f0f23; border-radius: 40px; overflow: hidden; display: flex; flex-direction: column; border: 3px solid #2a2a4a; position: relative; }
+  .phone-status { height: 54px; display: flex; align-items: flex-end; justify-content: space-between; padding: 0 30px 8px; font-size: 12px; font-weight: 600; color: #fff; flex-shrink: 0; }
+  .phone-status .time { font-size: 15px; }
+  .phone-status .icons { display: flex; gap: 5px; }
+  .phone-status .icons svg { width: 16px; height: 16px; fill: #fff; }
+  .phone-content { flex: 1; overflow-y: auto; display: flex; flex-direction: column; }
+  .home-indicator { height: 34px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .home-indicator div { width: 134px; height: 5px; background: #555577; border-radius: 3px; }
+
+  .webapp-bar { background: #16163a; padding: 10px 16px; display: flex; align-items: center; border-bottom: 1px solid #2a2a4a; position: sticky; top: 0; z-index: 10; flex-shrink: 0; }
+  .webapp-bar .back { color: #6c8fff; font-size: 15px; cursor: pointer; display: none; align-items: center; gap: 2px; }
+  .webapp-bar .back.visible { display: flex; }
+  .webapp-bar .title { flex: 1; text-align: center; font-size: 16px; font-weight: 600; color: #fff; }
+  .webapp-bar .close { color: #8888aa; font-size: 16px; cursor: pointer; width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; border-radius: 50%; background: rgba(255,255,255,0.06); }
+
+  /* Views */
+  .view { display: none; padding: 16px; }
+  .view.active { display: block; }
+
+  /* Dashboard */
+  .greeting .hello { font-size: 14px; color: #8888aa; }
+  .greeting .uname { font-size: 22px; font-weight: 700; color: #fff; }
+  .stats { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin: 16px 0; }
+  .stat { background: #16163a; border-radius: 14px; padding: 14px 10px; text-align: center; cursor: pointer; }
+  .stat:hover { background: #1e1e48; }
+  .stat .num { font-size: 26px; font-weight: 700; }
+  .stat .lab { font-size: 11px; color: #8888aa; margin-top: 2px; }
+  .s-active .num { color: #4a7cff; }
+  .s-over .num { color: #ff5252; }
+  .s-done .num { color: #4caf50; }
+
+  .search { background: #16163a; border-radius: 12px; padding: 10px 14px; display: flex; align-items: center; gap: 10px; margin-bottom: 14px; }
+  .search input { background: none; border: none; color: #e0e0e0; font-size: 14px; flex: 1; outline: none; }
+  .search input::placeholder { color: #555577; }
+
+  .filters { display: flex; gap: 6px; margin-bottom: 14px; overflow-x: auto; padding-bottom: 2px; }
+  .chip { padding: 6px 12px; border-radius: 18px; font-size: 13px; font-weight: 500; cursor: pointer; white-space: nowrap; background: #16163a; color: #8888aa; border: none; }
+  .chip.on { background: #4a7cff; color: #fff; }
+
+  .task-list { display: flex; flex-direction: column; gap: 8px; }
+  .task-card { background: #16163a; border-radius: 14px; padding: 14px; cursor: pointer; display: flex; gap: 10px; transition: background 0.12s; }
+  .task-card:hover { background: #1e1e48; }
+  .indicator { width: 4px; border-radius: 2px; align-self: stretch; flex-shrink: 0; }
+  .i-red { background: #ff5252; } .i-orange { background: #ffa726; } .i-blue { background: #4a7cff; } .i-purple { background: #ab47bc; } .i-green { background: #4caf50; }
+  .task-card .body { flex: 1; min-width: 0; }
+  .t-top { display: flex; justify-content: space-between; margin-bottom: 6px; }
+  .t-title { font-size: 15px; font-weight: 600; color: #fff; flex: 1; margin-right: 8px; }
+  .t-id { font-size: 12px; color: #555577; }
+  .t-bottom { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+  .badge { font-size: 11px; padding: 2px 8px; border-radius: 6px; font-weight: 600; }
+  .b-over { background: rgba(255,82,82,0.12); color: #ff5252; }
+  .b-prog { background: rgba(255,167,38,0.12); color: #ffa726; }
+  .b-new { background: rgba(74,124,255,0.12); color: #6c8fff; }
+  .b-rev { background: rgba(171,71,188,0.12); color: #ce93d8; }
+  .b-done { background: rgba(76,175,80,0.12); color: #4caf50; }
+  .t-meta { font-size: 12px; color: #666; }
+  .t-meta.over { color: #ff5252; }
+  .unread { width: 8px; height: 8px; background: #4a7cff; border-radius: 50%; }
+
+  .fab { position: absolute; bottom: 52px; right: 28px; width: 54px; height: 54px; background: #4a7cff; border-radius: 16px; display: flex; align-items: center; justify-content: center; cursor: pointer; box-shadow: 0 4px 20px rgba(74,124,255,0.35); font-size: 28px; color: #fff; border: none; z-index: 10; }
+
+  /* Task detail view */
+  .task-head { margin-bottom: 16px; }
+  .task-num { font-size: 13px; color: #6c8fff; font-weight: 600; }
+  .task-title-lg { font-size: 19px; font-weight: 700; color: #fff; margin: 4px 0 14px; }
+  .fields { display: flex; flex-direction: column; gap: 10px; }
+  .field { display: flex; }
+  .f-label { font-size: 13px; color: #8888aa; width: 90px; }
+  .f-value { font-size: 14px; color: #e0e0e0; font-weight: 500; }
+  .status-pill { padding: 3px 10px; border-radius: 6px; font-size: 12px; font-weight: 600; }
+
+  .tabs { display: flex; border-bottom: 1px solid #2a2a4a; margin: 16px -16px 0; padding: 0 16px; }
+  .tab { flex: 1; text-align: center; padding: 12px 4px; font-size: 13px; font-weight: 500; color: #555577; cursor: pointer; position: relative; border: none; background: none; }
+  .tab.on { color: #6c8fff; }
+  .tab.on::after { content: ''; position: absolute; bottom: 0; left: 16%; right: 16%; height: 2px; background: #4a7cff; border-radius: 2px; }
+  .tab .cnt { background: rgba(74,124,255,0.2); color: #6c8fff; font-size: 10px; padding: 1px 5px; border-radius: 8px; margin-left: 3px; }
+
+  .discussion { margin: 12px -16px 0; padding: 0 16px; display: flex; flex-direction: column; gap: 10px; }
+  .cmsg { display: flex; gap: 8px; }
+  .cmsg.right { flex-direction: row-reverse; }
+  .cav { width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 700; flex-shrink: 0; margin-top: 16px; }
+  .cmsg.left .cav { background: linear-gradient(135deg, #4a7cff, #6c5ce7); color: #fff; }
+  .cmsg.right .cav { background: linear-gradient(135deg, #26a69a, #4caf50); color: #fff; }
+  .cbubble { max-width: 78%; }
+  .csender { font-size: 11px; font-weight: 600; margin-bottom: 2px; }
+  .cmsg.left .csender { color: #6c8fff; }
+  .cmsg.right .csender { color: #4caf50; text-align: right; }
+  .ctext { padding: 8px 12px; font-size: 14px; line-height: 1.4; border-radius: 4px 14px 14px 14px; }
+  .cmsg.left .ctext { background: #1e1e48; }
+  .cmsg.right .ctext { background: #162e24; border-radius: 14px 4px 14px 14px; }
+  .ctime { font-size: 10px; color: rgba(255,255,255,0.2); margin-top: 2px; }
+  .cmsg.right .ctime { text-align: right; }
+  .date-sep { text-align: center; font-size: 11px; color: #444466; padding: 4px 0; }
+
+  .msg-input { background: #16163a; padding: 10px 16px; display: flex; align-items: center; gap: 10px; margin: 12px -16px 0; border-top: 1px solid #2a2a4a; }
+  .msg-input input { flex: 1; background: #1e1e48; border: none; border-radius: 20px; padding: 10px 14px; color: #e0e0e0; font-size: 14px; outline: none; }
+  .msg-input input::placeholder { color: #555577; }
+  .msg-input .send { width: 34px; height: 34px; background: #4a7cff; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; border: none; }
+  .msg-input .send svg { width: 16px; height: 16px; fill: #fff; }
+
+  /* Create task view */
+  .form-group { margin-bottom: 18px; }
+  .form-label { font-size: 12px; color: #8888aa; font-weight: 600; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.4px; }
+  .form-input { width: 100%; background: #16163a; border: 1px solid #2a2a4a; border-radius: 12px; padding: 12px 14px; color: #e0e0e0; font-size: 15px; outline: none; }
+  .form-input:focus { border-color: #4a7cff; }
+  .form-input::placeholder { color: #444466; }
+  textarea.form-input { min-height: 80px; resize: none; font-family: inherit; }
+  .form-row { display: flex; gap: 10px; }
+  .form-row .form-group { flex: 1; }
+  .pri-opts { display: flex; gap: 6px; }
+  .pri { flex: 1; padding: 10px; border-radius: 10px; text-align: center; font-size: 13px; font-weight: 600; cursor: pointer; border: 1px solid #2a2a4a; color: #666; background: none; }
+  .pri.sel.low { background: rgba(76,175,80,0.1); border-color: rgba(76,175,80,0.4); color: #4caf50; }
+  .pri.sel.med { background: rgba(255,167,38,0.1); border-color: rgba(255,167,38,0.4); color: #ffa726; }
+  .pri.sel.high { background: rgba(255,82,82,0.1); border-color: rgba(255,82,82,0.4); color: #ff5252; }
+  .submit-btn { width: 100%; padding: 15px; background: #4a7cff; border: none; border-radius: 14px; color: #fff; font-size: 16px; font-weight: 600; cursor: pointer; }
+  .submit-btn:hover { background: #3a6aef; }
+
+  .page-title { font-size: 22px; font-weight: 700; color: #fff; margin-bottom: 20px; }
+</style>
+</head>
+<body>
+
+<div class="phone">
+<div class="phone-status">
+  <span class="time">9:41</span>
+  <div class="icons">
+    <svg viewBox="0 0 24 24"><path d="M1 9l2 2c4.97-4.97 13.03-4.97 18 0l2-2C16.93 2.93 7.08 2.93 1 9zm8 8l3 3 3-3c-1.65-1.66-4.34-1.66-6 0zm-4-4l2 2c2.76-2.76 7.24-2.76 10 0l2-2C15.14 9.14 8.87 9.14 5 13z"/></svg>
+    <svg viewBox="0 0 24 24"><path d="M15.67 4H14V2h-4v2H8.33C7.6 4 7 4.6 7 5.33v15.33C7 21.4 7.6 22 8.33 22h7.33c.74 0 1.34-.6 1.34-1.33V5.33C17 4.6 16.4 4 15.67 4z"/></svg>
+  </div>
+</div>
+<div class="phone-content">
+<div class="webapp-bar">
+  <div class="back" id="backBtn" onclick="goBack()">
+    <span style="font-size:20px">‹</span> <span id="backLabel">Назад</span>
+  </div>
+  <div class="title" id="barTitle">БухКомпания Финлид</div>
+  <div class="close" onclick="WebApp.close()">✕</div>
+</div>
+
+<!-- DASHBOARD VIEW -->
+<div class="view active" id="viewDashboard">
+  <div class="greeting">
+    <div class="hello">Добрый день,</div>
+    <div class="uname" id="userName">Иван Петрович</div>
+  </div>
+  <div class="stats">
+    <div class="stat s-active" onclick="filterTasks('active')"><div class="num" id="statActive">0</div><div class="lab">В работе</div></div>
+    <div class="stat s-over" onclick="filterTasks('overdue')"><div class="num" id="statOverdue">0</div><div class="lab">Просрочено</div></div>
+    <div class="stat s-done" onclick="filterTasks('done')"><div class="num" id="statDone">0</div><div class="lab">Выполнено</div></div>
+  </div>
+  <div class="search"><span>🔍</span><input id="searchInput" placeholder="Поиск задач..." oninput="renderTasks()"></div>
+  <div class="filters" id="filters"></div>
+  <div class="task-list" id="taskList"></div>
+  <button class="fab" onclick="showCreate()">+</button>
+</div>
+
+<!-- TASK DETAIL VIEW -->
+<div class="view" id="viewDetail"></div>
+
+<!-- CREATE TASK VIEW -->
+<div class="view" id="viewCreate">
+  <div class="page-title">Создать задачу</div>
+  <div class="form-group">
+    <div class="form-label">Название</div>
+    <input class="form-input" id="newName" placeholder="Что нужно сделать?">
+  </div>
+  <div class="form-group">
+    <div class="form-label">Описание</div>
+    <textarea class="form-input" id="newDesc" placeholder="Подробности..."></textarea>
+  </div>
+  <div class="form-row">
+    <div class="form-group">
+      <div class="form-label">Срок</div>
+      <input class="form-input" id="newDate" placeholder="дд.мм.гггг">
+    </div>
+    <div class="form-group">
+      <div class="form-label">Приоритет</div>
+      <div class="pri-opts">
+        <button class="pri low" onclick="setPri(this,'low')">Низ</button>
+        <button class="pri med sel" onclick="setPri(this,'med')">Сред</button>
+        <button class="pri high" onclick="setPri(this,'high')">Выс</button>
+      </div>
+    </div>
+  </div>
+  <button class="submit-btn" onclick="createTask()">Создать задачу</button>
+</div>
+
+</div><!-- phone-content -->
+<div class="home-indicator"><div></div></div>
+</div><!-- phone -->
+
+<script>
+// ===== Mock window.WebApp (MAX Bridge) =====
+window.WebApp = {
+  initData: "query_id=test&user=%7B%22id%22%3A100%2C%22first_name%22%3A%22%D0%98%D0%B2%D0%B0%D0%BD%22%2C%22last_name%22%3A%22%D0%9F%D0%B5%D1%82%D1%80%D0%BE%D0%B2%D0%B8%D1%87%22%7D&auth_date=1234567890&hash=mock",
+  initDataUnsafe: {
+    query_id: "test",
+    user: { id: 100, first_name: "Иван", last_name: "Петрович", username: "ivan_p", language_code: "ru" },
+    auth_date: 1234567890,
+    hash: "mock"
+  },
+  platform: "web",
+  version: "25.9.16",
+  ready: function() { console.log("[WebApp] ready()"); },
+  close: function() { console.log("[WebApp] close()"); window.close(); },
+  expand: function() { console.log("[WebApp] expand()"); },
+  openLink: function(url) { window.open(url, '_blank'); },
+  openMaxLink: function(url) { console.log("[WebApp] openMaxLink:", url); },
+  sendData: function(data) { console.log("[WebApp] sendData:", data); },
+  enableClosingConfirmation: function() {},
+  disableClosingConfirmation: function() {},
+  onEvent: function(name, cb) { console.log("[WebApp] onEvent:", name); },
+  offEvent: function(name, cb) {},
+  shareContent: function(text, link) { console.log("[WebApp] share:", text, link); },
+  downloadFile: function(url, name) { console.log("[WebApp] download:", url, name); },
+  requestContact: function() { return Promise.resolve({ phone: "+79001234567" }); },
+  requestScreenMaxBrightness: function() {},
+  restoreScreenBrightness: function() {},
+  openCodeReader: function() { return Promise.resolve({ value: "QR_CODE_DATA" }); },
+  BackButton: {
+    isVisible: false,
+    show: function() { this.isVisible = true; document.getElementById('backBtn').classList.add('visible'); },
+    hide: function() { this.isVisible = false; document.getElementById('backBtn').classList.remove('visible'); },
+    onClick: function(cb) { this._cb = cb; },
+    offClick: function(cb) { this._cb = null; },
+  },
+  HapticFeedback: {
+    impactOccurred: function(style) { console.log("[Haptic] impact:", style); },
+    notificationOccurred: function(type) { console.log("[Haptic] notification:", type); },
+    selectionChanged: function() { console.log("[Haptic] selection"); },
+  },
+  DeviceStorage: {
+    _s: {},
+    setItem: function(k,v) { this._s[k]=v; return Promise.resolve(); },
+    getItem: function(k) { return Promise.resolve(this._s[k]); },
+    removeItem: function(k) { delete this._s[k]; return Promise.resolve(); },
+    clear: function() { this._s={}; return Promise.resolve(); },
+  },
+  BiometricManager: {
+    isBiometricAvailable: false,
+    biometricType: "fingerprint",
+    isAccessGranted: false,
+    init: function() { return Promise.resolve(); },
+    requestAccess: function() { return Promise.resolve(true); },
+    authenticate: function() { return Promise.resolve(true); },
+  },
+};
+window.WebApp.ready();
+// ===== End Mock Bridge =====
+
+// ===== Data (mock tasks) =====
+let tasks = [
+  { id: 38, name: "Сдать отчёт по НДС", deadline: "10.03.2026", status: "Просрочено", files: ["Декларация_НДС.pdf","Книга_продаж.xlsx"], messages: [
+    { from: "accountant", text: "Срочно нужны документы для сдачи отчёта.", time: "15:00" },
+    { from: "client", text: "Подготовлю к вечеру", time: "15:30" },
+    { from: "accountant", text: "Жду, срок уже прошёл.", time: "09:00" },
+  ]},
+  { id: 40, name: "Закрывающие документы за февраль", deadline: "25.03.2026", status: "На проверке", files: ["Акт_сверки.pdf","Накладная_01.pdf","Накладная_02.pdf","УПД_февраль.pdf"], messages: [] },
+  { id: 42, name: "Подготовить декларацию за 1 кв.", deadline: "15.04.2026", status: "В работе", files: ["Выписка_Сбер_Q1_2026.pdf"], messages: [
+    { from: "accountant", text: "Добрый день! Для подготовки декларации потребуются:\n1. Выписка из банка за янв–март\n2. Акты сверки\n3. Счета-фактуры", time: "10:30" },
+    { from: "client", text: "Здравствуйте! Выписку отправляю, акты будут завтра.", time: "10:45" },
+    { from: "accountant", text: "Получила, спасибо! Жду акты сверки.", time: "10:48" },
+    { from: "client", text: "Вот акты и счета-фактуры", time: "09:15" },
+    { from: "accountant", text: "Все документы получены! Приступаю к подготовке. Ориентировочно к 10 апреля.", time: "09:30" },
+  ]},
+  { id: 43, name: "Сверка с контрагентом ООО «Альфа»", deadline: "20.04.2026", status: "Новая", files: [], messages: [] },
+  { id: 44, name: "Начисление зарплаты за март", deadline: "05.04.2026", status: "В работе", files: [], messages: [
+    { from: "accountant", text: "Пришлите табель учёта рабочего времени за март.", time: "11:00" },
+  ]},
+  { id: 45, name: "Регистрация ККТ", deadline: "30.04.2026", status: "Новая", files: [], messages: [] },
+];
+
+let currentFilter = 'active';
+let currentView = 'dashboard';
+let currentTaskId = null;
+let selectedPri = 'med';
+
+// ===== Rendering =====
+function updateStats() {
+  document.getElementById('statActive').textContent = tasks.filter(t => t.status === 'В работе' || t.status === 'Новая' || t.status === 'На проверке').length;
+  document.getElementById('statOverdue').textContent = tasks.filter(t => t.status === 'Просрочено').length;
+  document.getElementById('statDone').textContent = tasks.filter(t => t.status === 'Завершена').length;
+}
+
+const filterMap = {
+  active: t => t.status !== 'Завершена',
+  overdue: t => t.status === 'Просрочено',
+  new: t => t.status === 'Новая',
+  progress: t => t.status === 'В работе',
+  review: t => t.status === 'На проверке',
+  done: t => t.status === 'Завершена',
+  all: () => true,
+};
+
+function renderFilters() {
+  const el = document.getElementById('filters');
+  const items = [
+    ['active','Актуальные'],['new','Новые'],['progress','В работе'],['review','На проверке'],['done','Завершённые'],['all','Все']
+  ];
+  el.innerHTML = items.map(([k,v]) =>
+    `<button class="chip ${currentFilter===k?'on':''}" onclick="filterTasks('${k}')">${v}</button>`
+  ).join('');
+}
+
+function filterTasks(f) {
+  currentFilter = f;
+  renderFilters();
+  renderTasks();
+  WebApp.HapticFeedback.selectionChanged();
+}
+
+function renderTasks() {
+  const search = document.getElementById('searchInput').value.toLowerCase();
+  const fn = filterMap[currentFilter] || filterMap.active;
+  let filtered = tasks.filter(fn);
+  if (search) filtered = filtered.filter(t => t.name.toLowerCase().includes(search) || ('#'+t.id).includes(search));
+
+  const el = document.getElementById('taskList');
+  if (!filtered.length) { el.innerHTML = '<div style="text-align:center;color:#555;padding:40px">Задач не найдено</div>'; return; }
+
+  el.innerHTML = filtered.map(t => {
+    const ic = statusIndicator(t.status);
+    const bc = statusBadgeClass(t.status);
+    const isOver = t.status === 'Просрочено';
+    return `<div class="task-card" onclick="showTask(${t.id})">
+      <div class="indicator ${ic}"></div>
+      <div class="body">
+        <div class="t-top"><span class="t-title">${esc(t.name)}</span><span class="t-id">#${t.id}</span></div>
+        <div class="t-bottom">
+          <span class="badge ${bc}">${t.status}</span>
+          <span class="t-meta ${isOver?'over':''}">📅 ${t.deadline}</span>
+          ${t.files.length ? `<span class="t-meta">📎 ${t.files.length}</span>` : ''}
+          ${t.messages.length ? `<span class="t-meta">💬 ${t.messages.length}</span>` : ''}
+          ${t.messages.length && t.messages[t.messages.length-1].from==='accountant' ? '<span class="unread"></span>' : ''}
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function statusIndicator(s) {
+  return { 'Просрочено':'i-red','В работе':'i-orange','Новая':'i-blue','На проверке':'i-purple','Завершена':'i-green' }[s] || 'i-blue';
+}
+function statusBadgeClass(s) {
+  return { 'Просрочено':'b-over','В работе':'b-prog','Новая':'b-new','На проверке':'b-rev','Завершена':'b-done' }[s] || 'b-new';
+}
+function statusPillStyle(s) {
+  const colors = { 'Просрочено':['rgba(255,82,82,0.12)','#ff5252'],'В работе':['rgba(255,167,38,0.12)','#ffa726'],'Новая':['rgba(74,124,255,0.12)','#6c8fff'],'На проверке':['rgba(171,71,188,0.12)','#ce93d8'],'Завершена':['rgba(76,175,80,0.12)','#4caf50'] };
+  const c = colors[s] || colors['Новая'];
+  return `background:${c[0]};color:${c[1]}`;
+}
+
+// ===== Task Detail =====
+function showTask(id) {
+  const t = tasks.find(x => x.id === id);
+  if (!t) return;
+  currentTaskId = id;
+  WebApp.HapticFeedback.impactOccurred('light');
+
+  const el = document.getElementById('viewDetail');
+  el.innerHTML = `
+    <div class="task-head">
+      <div class="task-num">#${t.id}</div>
+      <div class="task-title-lg">${esc(t.name)}</div>
+      <div class="fields">
+        <div class="field"><span class="f-label">Статус</span><span class="status-pill" style="${statusPillStyle(t.status)}">${t.status}</span></div>
+        <div class="field"><span class="f-label">Срок</span><span class="f-value">${t.deadline}</span></div>
+        <div class="field"><span class="f-label">Исполнитель</span><span class="f-value">БухКомпания Финлид</span></div>
+        <div class="field"><span class="f-label">Файлов</span><span class="f-value">${t.files.length}</span></div>
+      </div>
+    </div>
+    <div class="tabs">
+      <button class="tab on">Обсуждение<span class="cnt">${t.messages.length}</span></button>
+      <button class="tab">Файлы<span class="cnt">${t.files.length}</span></button>
+    </div>
+    <div class="discussion">
+      ${t.messages.length === 0 ? '<div style="text-align:center;color:#555;padding:30px">Сообщений пока нет</div>' :
+        t.messages.map(m => {
+          const isClient = m.from === 'client';
+          return `<div class="cmsg ${isClient?'right':'left'}">
+            <div class="cav">${isClient?'ИП':'БК'}</div>
+            <div class="cbubble">
+              <div class="csender">${isClient?'Иван Петрович':'БухКомпания Финлид'}</div>
+              <div class="ctext">${esc(m.text).replace(/\n/g,'<br>')}</div>
+              <div class="ctime">${m.time}</div>
+            </div>
+          </div>`;
+        }).join('')
+      }
+    </div>
+    <div class="msg-input">
+      <input id="taskMsgInput" placeholder="Сообщение по задаче...">
+      <button class="send" onclick="sendTaskMsg()"><svg viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg></button>
+    </div>
+  `;
+
+  navigateTo('detail', `Задача #${t.id}`);
+}
+
+function sendTaskMsg() {
+  const input = document.getElementById('taskMsgInput');
+  const text = input.value.trim();
+  if (!text || !currentTaskId) return;
+  const t = tasks.find(x => x.id === currentTaskId);
+  if (!t) return;
+  t.messages.push({ from: 'client', text: text, time: new Date().toLocaleTimeString('ru',{hour:'2-digit',minute:'2-digit'}) });
+  input.value = '';
+  WebApp.HapticFeedback.impactOccurred('light');
+  showTask(currentTaskId);
+}
+
+// ===== Create Task =====
+function showCreate() {
+  WebApp.HapticFeedback.impactOccurred('medium');
+  navigateTo('create', 'Новая задача');
+}
+
+function setPri(el, val) {
+  selectedPri = val;
+  document.querySelectorAll('.pri').forEach(p => p.classList.remove('sel'));
+  el.classList.add('sel');
+}
+
+function createTask() {
+  const name = document.getElementById('newName').value.trim();
+  const date = document.getElementById('newDate').value.trim();
+  if (!name) { alert('Введите название'); return; }
+  if (!date) { alert('Укажите срок'); return; }
+
+  const id = Math.max(...tasks.map(t=>t.id)) + 1;
+  tasks.push({ id, name, deadline: date, status: 'Новая', files: [], messages: [] });
+
+  WebApp.HapticFeedback.notificationOccurred('success');
+  document.getElementById('newName').value = '';
+  document.getElementById('newDesc').value = '';
+  document.getElementById('newDate').value = '';
+
+  goBack();
+  updateStats();
+  renderTasks();
+}
+
+// ===== Navigation =====
+function navigateTo(view, title) {
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+  document.querySelector('.fab').style.display = view === 'dashboard' ? '' : 'none';
+  currentView = view;
+
+  if (view === 'dashboard') {
+    document.getElementById('viewDashboard').classList.add('active');
+    document.getElementById('barTitle').textContent = 'БухКомпания Финлид';
+    WebApp.BackButton.hide();
+  } else if (view === 'detail') {
+    document.getElementById('viewDetail').classList.add('active');
+    document.getElementById('barTitle').textContent = title;
+    document.getElementById('backLabel').textContent = 'Задачи';
+    WebApp.BackButton.show();
+  } else if (view === 'create') {
+    document.getElementById('viewCreate').classList.add('active');
+    document.getElementById('barTitle').textContent = title;
+    document.getElementById('backLabel').textContent = 'Задачи';
+    WebApp.BackButton.show();
+  }
+}
+
+function goBack() {
+  navigateTo('dashboard', 'БухКомпания Финлид');
+  updateStats();
+  renderTasks();
+}
+
+function esc(s) { const d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
+
+// ===== Init =====
+document.getElementById('userName').textContent =
+  WebApp.initDataUnsafe.user.first_name + ' ' + WebApp.initDataUnsafe.user.last_name;
+updateStats();
+renderFilters();
+renderTasks();
+</script>
+
+</body>
+</html>
