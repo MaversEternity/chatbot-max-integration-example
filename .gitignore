@@ -1,0 +1,17 @@
+# Binary
+max-chat
+
+# OS
+.DS_Store
+
+# Node
+miniapp/node_modules/
+miniapp/dist/
+
+# Built mini app served by Go
+web/miniapp/
+
+# IDE
+.idea/
+.vscode/
+*.swp
