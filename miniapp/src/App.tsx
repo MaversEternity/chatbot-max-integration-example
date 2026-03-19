@@ -1,16 +1,15 @@
 import { useState, useEffect, useCallback } from 'react';
+import { Button, Container, Flex, Typography } from '@maxhub/max-ui';
 import { bridge } from './bridge';
 import { mockTasks } from './data';
 import type { Task } from './types';
 import Dashboard from './views/Dashboard';
 import TaskDetail from './views/TaskDetail';
 import CreateTask from './views/CreateTask';
-import styles from './App.module.css';
 
 type View = { type: 'dashboard' } | { type: 'task'; id: number } | { type: 'create' };
 
 function getInitialView(): View {
-  // Check URL param (mock) or Bridge start_param (production)
   const urlParam = new URLSearchParams(window.location.search).get('startapp');
   const bridgeParam = (window as any).WebApp?.initDataUnsafe?.start_param;
   const param = urlParam || bridgeParam || '';
@@ -40,37 +39,54 @@ export default function App() {
     : view.type === 'create' ? 'Новая задача' : 'Финлид';
 
   return (
-    <div className={styles.app}>
-      <header className={styles.header}>
-        {view.type !== 'dashboard' ? (
-          <button className={styles.backBtn} onClick={goBack}>‹ Назад</button>
-        ) : <div style={{ width: 60 }} />}
-        <div className={styles.title}>{title}</div>
-        <div style={{ width: 60 }} />
-      </header>
-      <main className={styles.content}>
+    <Flex direction="column" style={{ minHeight: '100vh', background: '#f5f5f7' }}>
+      <Flex
+        align="center"
+        style={{
+          padding: '12px 16px', borderBottom: '1px solid #e8e8ec',
+          position: 'sticky', top: 0, zIndex: 10, background: '#fff', minHeight: 48
+        }}
+      >
+        <Container style={{ width: 60 }}>
+          {view.type !== 'dashboard' && (
+            <Button size="small" mode="link" onClick={goBack}>‹ Назад</Button>
+          )}
+        </Container>
+        <Container style={{ flex: 1, textAlign: 'center' }}>
+          <Typography.Title variant="small-strong">{title}</Typography.Title>
+        </Container>
+        <Container style={{ width: 60 }} />
+      </Flex>
+
+      <Container style={{ flex: 1 }}>
         {view.type === 'dashboard' && (
-          <Dashboard tasks={tasks} onOpenTask={id => { bridge.hapticImpact('light'); setView({ type: 'task', id }); }} onCreate={() => { bridge.hapticImpact('medium'); setView({ type: 'create' }); }} />
+          <Dashboard
+            tasks={tasks}
+            onOpenTask={id => { bridge.hapticImpact('light'); setView({ type: 'task', id }); }}
+            onCreate={() => { bridge.hapticImpact('medium'); setView({ type: 'create' }); }}
+          />
         )}
         {view.type === 'task' && (
-          <TaskDetail task={tasks.find(t => t.id === (view as any).id)!} onSendMessage={(taskId, text) => {
-            const now = () => new Date().toLocaleTimeString('ru', { hour: '2-digit', minute: '2-digit' });
-            setTasks(prev => prev.map(t => t.id === taskId ? { ...t, messages: [...t.messages, { from: 'client', text, time: now() }] } : t));
-            bridge.hapticImpact('light');
-            // Emulate accountant reply
-            setTimeout(() => {
-              const replies = [
-                'Добрый день! Приняла в работу, вернусь с ответом в течение часа.',
-                'Спасибо за информацию! Проверю и напишу, если потребуется что-то ещё.',
-                'Получила, спасибо! Документы в порядке.',
-                'Хорошо, учту. Если будут вопросы — напишу.',
-                'Принято! Подготовлю всё к указанному сроку.',
-              ];
-              const reply = replies[Math.floor(Math.random() * replies.length)];
-              setTasks(prev => prev.map(t => t.id === taskId ? { ...t, messages: [...t.messages, { from: 'accountant', text: reply, time: now() }] } : t));
-              bridge.hapticNotification('success');
-            }, 2000);
-          }} />
+          <TaskDetail
+            task={tasks.find(t => t.id === (view as any).id)!}
+            onSendMessage={(taskId, text) => {
+              const now = () => new Date().toLocaleTimeString('ru', { hour: '2-digit', minute: '2-digit' });
+              setTasks(prev => prev.map(t => t.id === taskId ? { ...t, messages: [...t.messages, { from: 'client', text, time: now() }] } : t));
+              bridge.hapticImpact('light');
+              setTimeout(() => {
+                const replies = [
+                  'Добрый день! Приняла в работу, вернусь с ответом в течение часа.',
+                  'Спасибо за информацию! Проверю и напишу, если потребуется что-то ещё.',
+                  'Получила, спасибо! Документы в порядке.',
+                  'Хорошо, учту. Если будут вопросы — напишу.',
+                  'Принято! Подготовлю всё к указанному сроку.',
+                ];
+                const reply = replies[Math.floor(Math.random() * replies.length)];
+                setTasks(prev => prev.map(t => t.id === taskId ? { ...t, messages: [...t.messages, { from: 'accountant', text: reply, time: now() }] } : t));
+                bridge.hapticNotification('success');
+              }, 2000);
+            }}
+          />
         )}
         {view.type === 'create' && (
           <CreateTask onSubmit={(name, deadline) => {
@@ -80,7 +96,7 @@ export default function App() {
             setView({ type: 'dashboard' });
           }} />
         )}
-      </main>
-    </div>
+      </Container>
+    </Flex>
   );
 }

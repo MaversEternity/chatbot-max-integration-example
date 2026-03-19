@@ -1,8 +1,10 @@
 import { useState } from 'react';
-import { Button, CellHeader, CellList, CellSimple, Counter, Panel, SearchInput, Typography } from '@maxhub/max-ui';
+import {
+  Button, CellHeader, CellList, CellSimple, Container, Counter,
+  Flex, Grid, Panel, SearchInput, Typography
+} from '@maxhub/max-ui';
 import { bridge } from '../bridge';
 import type { Task, TaskStatus } from '../types';
-import styles from './Dashboard.module.css';
 
 interface Props {
   tasks: Task[];
@@ -64,36 +66,39 @@ export default function Dashboard({ tasks, onOpenTask, onCreate }: Props) {
   }
 
   return (
-    <div className={styles.root}>
-      <div className={styles.greeting}>
+    <Container style={{ padding: 16, paddingBottom: 80 }}>
+      <Container style={{ marginBottom: 16 }}>
         <Typography.Body>Добрый день,</Typography.Body>
         <Typography.Title>{user.first_name} {user.last_name}</Typography.Title>
-      </div>
+      </Container>
 
-      <div className={styles.stats}>
-        <Panel mode="secondary" className={styles.stat} onClick={() => { setFilter('active'); bridge.hapticSelection(); }}>
+      <Grid cols={3} gap={8} style={{ marginBottom: 16 }}>
+        <Panel mode="secondary" centeredX style={{ padding: '14px 8px', cursor: 'pointer', borderRadius: 14 }}
+          onClick={() => { setFilter('active'); bridge.hapticSelection(); }}>
           <Typography.Display style={{ color: '#4a7cff' }}>{active}</Typography.Display>
           <Typography.Label>В работе</Typography.Label>
         </Panel>
-        <Panel mode="secondary" className={styles.stat} onClick={() => { setFilter('overdue'); bridge.hapticSelection(); }}>
+        <Panel mode="secondary" centeredX style={{ padding: '14px 8px', cursor: 'pointer', borderRadius: 14 }}
+          onClick={() => { setFilter('overdue'); bridge.hapticSelection(); }}>
           <Typography.Display style={{ color: '#ff5252' }}>{overdue}</Typography.Display>
           <Typography.Label>Просрочено</Typography.Label>
         </Panel>
-        <Panel mode="secondary" className={styles.stat} onClick={() => { setFilter('done'); bridge.hapticSelection(); }}>
+        <Panel mode="secondary" centeredX style={{ padding: '14px 8px', cursor: 'pointer', borderRadius: 14 }}
+          onClick={() => { setFilter('done'); bridge.hapticSelection(); }}>
           <Typography.Display style={{ color: '#4caf50' }}>{done}</Typography.Display>
           <Typography.Label>Выполнено</Typography.Label>
         </Panel>
-      </div>
+      </Grid>
 
-      <div className={styles.searchWrap}>
+      <Container style={{ marginBottom: 12 }}>
         <SearchInput
           placeholder="Поиск задач..."
           value={search}
           onChange={e => setSearch(e.target.value)}
         />
-      </div>
+      </Container>
 
-      <div className={styles.filters}>
+      <Flex gap={6} style={{ overflowX: 'auto', paddingBottom: 12, scrollbarWidth: 'none' }}>
         {filters.map(f => (
           <Button
             key={f.key}
@@ -104,7 +109,7 @@ export default function Dashboard({ tasks, onOpenTask, onCreate }: Props) {
             {f.label}
           </Button>
         ))}
-      </div>
+      </Flex>
 
       <CellList mode="island" header={<CellHeader>Задачи</CellHeader>}>
         {filtered.length === 0 && (
@@ -122,9 +127,14 @@ export default function Dashboard({ tasks, onOpenTask, onCreate }: Props) {
               </span>
             }
             overline={`#${task.id}`}
-            before={<div className={styles.indicator} style={{ background: statusColor[task.status] }} />}
+            before={
+              <Container style={{
+                width: 4, height: '100%', minHeight: 32,
+                borderRadius: 2, background: statusColor[task.status]
+              }} />
+            }
             after={task.messages.length > 0 && task.messages[task.messages.length - 1].from === 'accountant'
-              ? <Counter>{task.messages.length}</Counter>
+              ? <Counter value={task.messages.length}>{task.messages.length}</Counter>
               : undefined
             }
             showChevron
@@ -133,11 +143,11 @@ export default function Dashboard({ tasks, onOpenTask, onCreate }: Props) {
         ))}
       </CellList>
 
-      <div className={styles.fabWrap}>
-        <Button size="large" mode="primary" onClick={onCreate}>
+      <Container style={{ position: 'fixed', bottom: 16, left: 16, right: 16, zIndex: 5 }}>
+        <Button size="large" mode="primary" stretched onClick={onCreate}>
           + Создать задачу
         </Button>
-      </div>
-    </div>
+      </Container>
+    </Container>
   );
 }

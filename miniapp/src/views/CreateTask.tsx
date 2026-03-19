@@ -1,6 +1,5 @@
 import { useState } from 'react';
-import { Button, CellHeader, CellList, Input, Textarea, Typography } from '@maxhub/max-ui';
-import styles from './CreateTask.module.css';
+import { Button, CellHeader, CellList, Container, Flex, Input, Textarea, Typography } from '@maxhub/max-ui';
 
 interface Props {
   onSubmit: (name: string, deadline: string) => void;
@@ -18,7 +17,7 @@ export default function CreateTask({ onSubmit }: Props) {
   };
 
   return (
-    <div className={styles.root}>
+    <Container style={{ padding: 16, minHeight: '100vh' }}>
       <Typography.Title>Создать задачу</Typography.Title>
 
       <CellList mode="island" header={<CellHeader>Название</CellHeader>}>
@@ -46,7 +45,7 @@ export default function CreateTask({ onSubmit }: Props) {
       </CellList>
 
       <CellList mode="island" header={<CellHeader>Приоритет</CellHeader>}>
-        <div className={styles.priorities}>
+        <Flex gap={8} style={{ padding: 8 }}>
           <Button
             size="small"
             mode={priority === 'low' ? 'primary' : 'secondary'}
@@ -70,14 +69,14 @@ export default function CreateTask({ onSubmit }: Props) {
           >
             Высокий
           </Button>
-        </div>
+        </Flex>
       </CellList>
 
-      <div className={styles.submit}>
+      <Container style={{ marginTop: 24 }}>
         <Button size="large" mode="primary" stretched onClick={handleSubmit}>
           Создать задачу
         </Button>
-      </div>
-    </div>
+      </Container>
+    </Container>
   );
 }

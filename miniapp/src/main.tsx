@@ -5,7 +5,7 @@ import '@maxhub/max-ui/dist/styles.css';
 import App from './App';
 import './index.css';
 
-window.WebApp?.ready();
+(window as any).WebApp?.ready();
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
