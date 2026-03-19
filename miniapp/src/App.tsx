@@ -39,15 +39,18 @@ export default function App() {
     : view.type === 'create' ? 'Новая задача' : 'Финлид';
 
   return (
-    <Flex direction="column" style={{ minHeight: '100vh', background: '#f5f5f7' }}>
+    <Flex direction="column" style={{ minHeight: '100vh' }}>
       <Flex
         align="center"
         style={{
-          padding: '12px 16px', borderBottom: '1px solid #e8e8ec',
-          position: 'sticky', top: 0, zIndex: 10, background: '#fff', minHeight: 48
+          padding: '12px 16px',
+          borderBottom: '1px solid var(--max-bg_tertiary, #333)',
+          position: 'sticky', top: 0, zIndex: 10,
+          background: 'var(--max-bg_secondary, #222)',
+          minHeight: 48
         }}
       >
-        <Container style={{ width: 60 }}>
+        <Container style={{ width: 70, flexShrink: 0 }}>
           {view.type !== 'dashboard' && (
             <Button size="small" mode="link" onClick={goBack}>‹ Назад</Button>
           )}
@@ -55,7 +58,7 @@ export default function App() {
         <Container style={{ flex: 1, textAlign: 'center' }}>
           <Typography.Title variant="small-strong">{title}</Typography.Title>
         </Container>
-        <Container style={{ width: 60 }} />
+        <Container style={{ width: 70, flexShrink: 0 }} />
       </Flex>
 
       <Container style={{ flex: 1 }}>

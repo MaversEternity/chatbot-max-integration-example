@@ -73,19 +73,19 @@ export default function Dashboard({ tasks, onOpenTask, onCreate }: Props) {
       </Container>
 
       <Grid cols={3} gap={8} style={{ marginBottom: 16 }}>
-        <Panel mode="secondary" centeredX style={{ padding: '14px 8px', cursor: 'pointer', borderRadius: 14 }}
+        <Panel mode="secondary" centeredX style={{ padding: '14px 8px', cursor: 'pointer' }}
           onClick={() => { setFilter('active'); bridge.hapticSelection(); }}>
-          <Typography.Display style={{ color: '#4a7cff' }}>{active}</Typography.Display>
+          <Typography.Display style={{ color: '#5b9aff' }}>{active}</Typography.Display>
           <Typography.Label>В работе</Typography.Label>
         </Panel>
-        <Panel mode="secondary" centeredX style={{ padding: '14px 8px', cursor: 'pointer', borderRadius: 14 }}
+        <Panel mode="secondary" centeredX style={{ padding: '14px 8px', cursor: 'pointer' }}
           onClick={() => { setFilter('overdue'); bridge.hapticSelection(); }}>
-          <Typography.Display style={{ color: '#ff5252' }}>{overdue}</Typography.Display>
+          <Typography.Display style={{ color: '#ff6b6b' }}>{overdue}</Typography.Display>
           <Typography.Label>Просрочено</Typography.Label>
         </Panel>
-        <Panel mode="secondary" centeredX style={{ padding: '14px 8px', cursor: 'pointer', borderRadius: 14 }}
+        <Panel mode="secondary" centeredX style={{ padding: '14px 8px', cursor: 'pointer' }}
           onClick={() => { setFilter('done'); bridge.hapticSelection(); }}>
-          <Typography.Display style={{ color: '#4caf50' }}>{done}</Typography.Display>
+          <Typography.Display style={{ color: '#66d9a0' }}>{done}</Typography.Display>
           <Typography.Label>Выполнено</Typography.Label>
         </Panel>
       </Grid>
@@ -98,7 +98,7 @@ export default function Dashboard({ tasks, onOpenTask, onCreate }: Props) {
         />
       </Container>
 
-      <Flex gap={6} style={{ overflowX: 'auto', paddingBottom: 12, scrollbarWidth: 'none' }}>
+      <Flex gap={6} className="filters-scroll" style={{ overflowX: 'auto', paddingBottom: 12 }}>
         {filters.map(f => (
           <Button
             key={f.key}

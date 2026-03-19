@@ -29,18 +29,18 @@ export default function TaskDetail({ task, onSendMessage }: Props) {
         <CellList style={{ marginTop: 16 }}>
           <CellSimple
             height="compact"
-            title={<Typography.Body variant="small" style={{ color: '#8e8e9a' }}>Статус</Typography.Body>}
-            after={<Typography.Body variant="small-strong" style={{ color: '#7c5ce7' }}>{task.status}</Typography.Body>}
+            title={<Typography.Body variant="small" style={{ color: 'var(--max-text_secondary, #8e8e9a)' }}>Статус</Typography.Body>}
+            after={<Typography.Body variant="small-strong" style={{ color: 'var(--max-accent, #7c5ce7)' }}>{task.status}</Typography.Body>}
           />
           <CellSimple
             height="compact"
-            title={<Typography.Body variant="small" style={{ color: '#8e8e9a' }}>Срок</Typography.Body>}
+            title={<Typography.Body variant="small" style={{ color: 'var(--max-text_secondary, #8e8e9a)' }}>Срок</Typography.Body>}
             after={
               <Flex align="center" gap={8}>
                 <Typography.Body variant="small-strong">{task.deadline}</Typography.Body>
                 {deadlineBadge(task.deadline) && (
                   <Typography.Label variant="small-caps" style={{
-                    background: '#f0eef5', color: '#7c5ce7',
+                    background: 'var(--max-bg_tertiary, #333)', color: '#7c5ce7',
                     padding: '2px 8px', borderRadius: 10
                   }}>
                     {deadlineBadge(task.deadline)}
@@ -51,19 +51,19 @@ export default function TaskDetail({ task, onSendMessage }: Props) {
           />
           <CellSimple
             height="compact"
-            title={<Typography.Body variant="small" style={{ color: '#8e8e9a' }}>Исполнитель</Typography.Body>}
+            title={<Typography.Body variant="small" style={{ color: 'var(--max-text_secondary, #8e8e9a)' }}>Исполнитель</Typography.Body>}
             after={<Typography.Body variant="small-strong">БухКомпания Финлид</Typography.Body>}
           />
           <CellSimple
             height="compact"
-            title={<Typography.Body variant="small" style={{ color: '#8e8e9a' }}>Создана</Typography.Body>}
+            title={<Typography.Body variant="small" style={{ color: 'var(--max-text_secondary, #8e8e9a)' }}>Создана</Typography.Body>}
             after={<Typography.Body variant="small-strong">{formatDate(new Date())}</Typography.Body>}
           />
         </CellList>
 
         {/* Описание */}
         <CellList style={{ marginTop: 16 }} header={<CellHeader>Описание задачи</CellHeader>}>
-          <CellSimple title={<Typography.Body variant="small" style={{ color: '#b0b0bc' }}>Укажите детали, если необходимо</Typography.Body>} />
+          <CellSimple title={<Typography.Body variant="small" style={{ color: 'var(--max-text_tertiary, #b0b0bc)' }}>Укажите детали, если необходимо</Typography.Body>} />
         </CellList>
 
         {/* Вложения */}
@@ -71,7 +71,7 @@ export default function TaskDetail({ task, onSendMessage }: Props) {
           <CellList
             style={{ marginTop: 16 }}
             header={
-              <CellHeader after={<Typography.Body variant="small" style={{ color: '#8e8e9a' }}>{task.files.length}</Typography.Body>}>
+              <CellHeader after={<Typography.Body variant="small" style={{ color: 'var(--max-text_secondary, #8e8e9a)' }}>{task.files.length}</Typography.Body>}>
                 Вложения
               </CellHeader>
             }
@@ -83,11 +83,11 @@ export default function TaskDetail({ task, onSendMessage }: Props) {
         )}
 
         {/* История */}
-        <Container style={{ marginTop: 16, borderTop: '1px solid #f0f0f3', paddingTop: 16 }}>
+        <Container style={{ marginTop: 16, borderTop: '1px solid var(--max-bg_tertiary, #333)', paddingTop: 16 }}>
           <CellAction onClick={() => setShowHistory(!showHistory)}>
             <Flex justify="space-between" align="center" style={{ width: '100%' }}>
               <Typography.Body variant="small-strong">История</Typography.Body>
-              <Typography.Body variant="small" style={{ color: '#8e8e9a' }}>{showHistory ? '˄' : '˅'}</Typography.Body>
+              <Typography.Body variant="small" style={{ color: 'var(--max-text_secondary, #8e8e9a)' }}>{showHistory ? '˄' : '˅'}</Typography.Body>
             </Flex>
           </CellAction>
           {showHistory && (
@@ -98,20 +98,20 @@ export default function TaskDetail({ task, onSendMessage }: Props) {
         </Container>
 
         {/* Комментарии */}
-        <Container style={{ marginTop: 8, borderTop: '1px solid #f0f0f3', paddingTop: 16 }}>
+        <Container style={{ marginTop: 8, borderTop: '1px solid var(--max-bg_tertiary, #333)', paddingTop: 16 }}>
           <CellAction onClick={() => setShowComments(!showComments)}>
             <Flex justify="space-between" align="center" style={{ width: '100%' }}>
               <Typography.Body variant="small-strong">
                 {task.messages.length} комментари{suffix(task.messages.length)}
               </Typography.Body>
-              <Typography.Body variant="small" style={{ color: '#8e8e9a' }}>{showComments ? '˄' : '˅'}</Typography.Body>
+              <Typography.Body variant="small" style={{ color: 'var(--max-text_secondary, #8e8e9a)' }}>{showComments ? '˄' : '˅'}</Typography.Body>
             </Flex>
           </CellAction>
 
           {showComments && (
             <Flex direction="column" gap={16} style={{ padding: '8px 0' }}>
               {task.messages.length === 0 && (
-                <Typography.Body variant="small" style={{ color: '#b0b0bc' }}>
+                <Typography.Body variant="small" style={{ color: 'var(--max-text_tertiary, #b0b0bc)' }}>
                   Добавьте первый комментарий
                 </Typography.Body>
               )}
@@ -124,7 +124,7 @@ export default function TaskDetail({ task, onSendMessage }: Props) {
                   <Flex key={i} justify="end">
                     <Panel mode="secondary" style={{
                       padding: '10px 14px', borderRadius: '16px 16px 4px 16px',
-                      maxWidth: '80%', background: '#f0eef5'
+                      maxWidth: '80%', background: 'var(--max-bg_tertiary, #333)'
                     }}>
                       <Typography.Body variant="small">{m.text}</Typography.Body>
                     </Panel>
@@ -157,8 +157,8 @@ export default function TaskDetail({ task, onSendMessage }: Props) {
         gap={10}
         style={{
           position: 'fixed', bottom: 0, left: 0, right: 0,
-          padding: '10px 16px', background: '#fff',
-          borderTop: '1px solid #e8e8ec'
+          padding: '10px 16px', background: 'var(--max-bg_secondary, #222)',
+          borderTop: '1px solid var(--max-bg_tertiary, #333)'
         }}
       >
         <IconButton size="medium" mode="tertiary">📎</IconButton>
